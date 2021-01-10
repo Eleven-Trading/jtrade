@@ -10,8 +10,15 @@
                          "COPY ./composer.json /var/www/html",
                          "RUN composer install -d /var/www/html",
                          "COPY ./credentials.php /var/www/html",
-                         "ARG mysqlhost=${mysqlhost} && ARG mysqlport=${mysqlport}",
-                         "RUN ( echo mysqlhost=$mysqlhost ; echo mysqlport=$mysqlport ; echo ARG mysqluser=${mysqluser}) > /var/www/html/.env",
+                         "ARG mysqlhost=${mysqlhost}",
+                         "ARG mysqlport=${mysqlport}",
+                         "ARG mysqluser=${mysqluser}",
+                         "ARG mysqlpassword=${mysqlpassword}",
+                         "ARG mysqldb=${mysqldb}",
+                         "ARG AWS_BUCKET=${AWS_BUCKET}",
+                         "ARG AWS_KEY=${AWS_KEY}",
+                         "ARG AWS_SECRKET=${AWS_SECRKET}",
+                         "RUN ( echo mysqlhost=$mysqlhost; echo mysqlport=$mysqlport; echo mysqluser=$mysqluser; echo mysqlpassword=$mysqlpassword; echo mysqldb=$mysqldb; echo AWS_BUCKET=$AWS_BUCKET; echo AWS_KEY=$AWS_KEY; echo AWS_SECRKET=$AWS_SECRKET) > /var/www/html/.env",
                          "CMD [ \"php\", \"-S\", \"[::]:80\", \"-t\", \"/var/www/html/dist\" ]",
                          "EXPOSE 80"
                      ]
