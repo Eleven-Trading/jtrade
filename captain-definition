@@ -10,7 +10,7 @@
                          "COPY ./composer.json /var/www/html",
                          "RUN composer install -d /var/www/html",
                          "COPY ./credentials.php /var/www/html",
-                         "ARG mysqlhost=${mysqlhost} && mysqlport=${mysqlport}",
+                         "ARG mysqlhost=${mysqlhost} && ARG mysqlport=${mysqlport}",
                          "RUN ( echo mysqlhost=$mysqlhost ; echo mysqlport=$mysqlport ; echo ARG mysqluser=${mysqluser}) > /var/www/html/.env",
                          "CMD [ \"php\", \"-S\", \"[::]:80\", \"-t\", \"/var/www/html/dist\" ]",
                          "EXPOSE 80"
