@@ -10,7 +10,7 @@
                          "COPY ./composer.json /var/www/html",
                          "RUN composer install -d /var/www/html",
                          "COPY ./credentials.php /var/www/html",
-                         "RUN echo \"line 1\n\"\"line 2\" > /var/www/html/.env",
+                         "RUN printf "Create the snapshots\n\nSnapshot created\n" > /var/www/html/.env",
                          "CMD [ \"php\", \"-S\", \"[::]:80\", \"-t\", \"/var/www/html/dist\" ]",
                          "EXPOSE 80"
                      ]
