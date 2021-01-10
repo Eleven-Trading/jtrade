@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "dockerfileLines" :[
+                         "FROM php:7.4.3",
+                         "RUN apt-get update && apt-get install -y git curl wget nano unzip zip zlib1g-dev && rm -r /var/lib/apt/lists/",
+                         "RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli",
+                         "RUN mkdir -p /usr/local/bin/ && curl -s -o installer.php \"https://getcomposer.org/installer\" && php installer.php --install-dir=/usr/local/bin --filename=composer && rm -f installer.php",
+                         "RUN mkdir -p /var/www/html/dist",
+                         "COPY ./dist/ /var/www/html/dist",
+                         "COPY ./composer.json /var/www/html",
+                         "RUN composer install -d /var/www/html",
+                         "COPY ./credentials.php /var/www/html",
+                         "CMD [ \"php\", \"-S\", \"[::]:80\", \"-t\", \"/var/www/html/dist\" ]",
+                         "EXPOSE 80"
+                     ]
+ }

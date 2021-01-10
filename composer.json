@@ -1,0 +1,17 @@
+{
+    "name": "el_even/jtrade",
+    "version": "1.0.0",
+    "description": "jtrade is a simple and an open source tool to journalize your trades", 
+    "authors": [
+        {
+            "name": "eleven.trading"
+        }
+    ],
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "vlucas/phpdotenv": "^5.1",
+        "php-curl-class/php-curl-class": "^8.8",
+        "aws/aws-sdk-php": "^3.151",
+        "joseraul/finviz-scraper": "^0.0.4"
+    }
+}
