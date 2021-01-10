@@ -1,0 +1,864 @@
+<html>
+    <head>
+        <link rel="icon" type="image/png" href="images/bull.png"/>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/style.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@3.17.10/dist/tagify.css"/>
+        <script src="https://use.fontawesome.com/365512f0c3.js"></script>
+    </head>
+    <body>
+        <div id="vapp" class="container-fluid">
+            <div class="loading" v-if=spinner>
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="h-100" v-if=!spinner>
+                <!-- Image and text -->
+                <nav class="navbar navbar-light bg-light">
+                    <img class="logo" src="/images/bull.png">
+                    <div class="text-right">
+                        <form enctype="multipart/form-data">
+                            <input type="file" @change="createTables($event, setups)"/>
+                        </form>
+                    </div>
+                </nav>
+
+                <div class="" v-if="executions != null" v-for="(execution, index) in executions">
+
+                    <h2 class="text-center text-blue mb-3 mt-2">{{ $moment.unix(index).format("dddd, DD MMM YYYY") }}</h2>
+
+                    <div class="">
+                        <h3 class="ml-2 mt-2 text-blue">BLOTTER</h3>
+                        <table class="table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">Symbol</th>
+                                    <th scope="col">Tot Qty</th>
+                                    <th scope="col">P/L gross</th>
+                                    <th scope="col">Comm</th>
+                                    <th scope="col">Tot Fees</th>
+                                    <th scope="col">P/L net</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="symbBlot in symbolBlotter[index]">
+                                    <td>{{symbBlot.symbol}}</td>
+                                    <td>{{symbBlot.sumQuantity}}</td>
+                                    <td v-bind:class="[symbBlot.sumGrossProceeds>0 ? 'greenTrade' : 'redTrade']">{{(symbBlot.sumGrossProceeds).toFixed(2)}}</td>
+                                    <td>{{(symbBlot.sumCommission).toFixed(2)}}</td>
+                                    <td>{{(symbBlot.sumFees).toFixed(2)}}</td>
+                                    <td v-bind:class="[symbBlot.sumNetProceeds>0 ? 'greenTrade' : 'redTrade']">{{(symbBlot.sumNetProceeds).toFixed(2)}}</td>
+                                </tr>
+                                <tr class="sumRow">
+                                    <td>All</td>
+                                    <td>{{blotter[index].sumQuantity}}</td>
+                                    <td v-bind:class="[blotter[index].sumGrossProceeds>0 ? 'greenTrade' : 'redTrade']">{{(blotter[index].sumGrossProceeds).toFixed(2)}}</td>
+                                    <td>{{(blotter[index].sumCommission).toFixed(2)}}</td>
+                                    <td>{{(blotter[index].sumFees).toFixed(2)}}</td>
+                                    <td v-bind:class="[blotter[index].sumNetProceeds>0 ? 'greenTrade' : 'redTrade']">{{(blotter[index].sumNetProceeds).toFixed(2)}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div>
+                            <h3 class="ml-2 text-blue d-inline-block">EXECUTIONS</h3>
+                            <button type="button" class="ml-3 btn btn-primary btn-sm" @click="executionsShow = !executionsShow">Show/Hide</button>
+                        </div>
+                        <table v-show="executionsShow == true " class="table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">id</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Side</th>
+                                    <th scope="col">Symbol</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">Exec Time</th>
+                                    <th scope="col">Comm</th>
+                                    <th scope="col">Gross Proceeds</th>
+                                    <th scope="col">Net Proceeds</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="dailyExecution in execution">
+                                    <td>{{dailyExecution.id}}</td>
+                                    <td>{{dailyExecution.account}}</td>
+                                    <td>{{dailyExecution.side}}</td>
+                                    <td>{{dailyExecution.symbol}}</td>
+                                    <td>{{dailyExecution.quantity}}</td>
+                                    <td>{{$moment.unix(dailyExecution.execTime).format("hh:mm:ss")}}</td>
+                                    <td>{{dailyExecution.commission}}</td>
+                                    <td>{{(dailyExecution.grossProceeds).toFixed(2)}}</td>
+                                    <td>{{(dailyExecution.netProceeds).toFixed(2)}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3 class="ml-2 mt-2 text-blue">TRADES</h3>
+                        <table class="table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">Symbol</th>
+                                    <th scope="col">Qty</th>
+                                    <th scope="col">Time(i)</th>
+                                    <th scope="col">Time(o)</th>
+                                    <th scope="col">Price(i)</th>
+                                    <th scope="col">Price(o)</th>
+                                    <th scope="col">P/L(g)</th>
+                                    <th scope="col">P/L(n)</th>
+                                    <th scope="col">Setups</th>
+                                    <th scope="col">Mistakes</th>
+
+                                </tr>
+                            </thead>
+                            <tbody v-for="dailyTrade in trades[index]">
+                                <tr>
+                                    <td>{{dailyTrade.symbol}}</td>
+                                    <td>{{dailyTrade.quantity}}</td>
+                                    <td>{{$moment.unix(dailyTrade.entryTime).format("hh:mm:ss")}}</td>
+                                    <td>{{$moment.unix(dailyTrade.exitTime).format("hh:mm:ss")}}</td>
+                                    <td>{{(dailyTrade.entryPrice).toFixed(2)}}</td>
+                                    <td>{{(dailyTrade.exitPrice).toFixed(2)}}</td>
+                                    <td v-bind:class="[dailyTrade.grossProceeds>0 ? 'greenTrade' : 'redTrade']">{{(dailyTrade.grossProceeds).toFixed(2)}}</td>
+                                    <td v-bind:class="[dailyTrade.netProceeds>0 ? 'greenTrade' : 'redTrade']">{{(dailyTrade.netProceeds).toFixed(2)}}</td>
+                                    <td style="width: 30%"><input name="setups" class="setupsClass form-control" @change="getTagify($event, index, 'setups',dailyTrade.id)"></td>
+                                    <td style="width: 15%"><input name="setups" class="setupsClass form-control" @change="getTagify($event, index, 'mistakes',dailyTrade.id)"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3 class="ml-2 text-blue">QUOTES</h3>
+                        <table class="table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">Symbol</th>
+                                    <th scope="col">Chart Image</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="dailyQuote in quotes[index]">
+                                    <td>{{dailyQuote.symbol}}</td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col file-upload-form">
+                                                <input type="file" @change="previewImage($event, index, dailyQuote.symbol)" accept="image/*">
+                                            </div>
+                                            <div class="col image-preview" v-if="quotes[index].find(x => x.symbol == dailyQuote.symbol).chartImage">
+                                                <img class="preview" :src="quotes[index].find(x => x.symbol == dailyQuote.symbol).chartImage">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3 class="ml-2 text-blue">JOURNAL</h3>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">Recording URL</span>
+                            </div>
+                            <input class="form-control" @change="getRecording($event, index, journals[index].id)">
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">Note</span>
+                            </div>
+                            <textarea v-model=journals[index].note rows="5" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-3" v-if="executions != null">
+                    <button type="button" class="btn btn-blue btn-lg btn-block" v-on:click="uploadJournals">UPLOAD</button>
+                </div>
+            </div>
+
+            <!-- ERROR MODAL -->
+            <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Error(s)/Alert(s) inserting data</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <ul class="list-group list-group-flush" v-for="error in responseError">
+                                <li class="list-group-item">{{error}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--end vue app-->
+
+        <!-- ********************************************************* 
+                        *
+                        SCRIPTS
+                        *
+                        ********************************************************* -->
+        <!--<script type="text/javascript" src="../node_modules/popper.js/dist/umd/popper.min.js"></script>-->
+        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
+
+        <script src="https://momentjs.com/downloads/moment-timezone-with-data.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue-moment-lib@1.2.2/dist/vue-moment-lib.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify@3.17.10/dist/tagify.min.js"></script>
+        <!-- ********************************************************* 
+                        *
+                        VUEJS
+                        *
+                        ********************************************************* -->
+        <script>
+
+            const vueApp = new Vue({
+
+                components: {}, el: '#vapp',
+                /***********************
+                                *
+                                * DATA
+                                *
+                                ***********************/
+                data() {
+                    return {
+                        spinner: false,
+                        executionsShow: false,
+                        blotter: null,
+                        symbolBlotter: null,
+                        executions: null,
+                        trades: null,
+                        quotes: null,
+                        journals: null,
+                        setups: null,
+                        imageData: "",
+                        responseError: null
+                    }
+                },
+
+                /***********************
+                                *
+                                * CREATED
+                                *
+                                ***********************/
+                created() {},
+
+                /***********************
+                                *
+                                * MOUNTED
+                                *
+                                ***********************/
+                mounted() {
+                    $('#errorModal').on('hidden.bs.modal', function (e) {
+                        location.reload();
+                        this.spinner = false
+                    })
+
+                    url = window.location.href + "scripts/getSetups.php"
+                    axios
+                        .post(url, {})
+                        .then(response => {
+                            this.setups = response.data
+
+                        })
+                        .catch(e => {
+                            this
+                                .errors
+                                .push(e)
+                            console.log(moment().format() + ": getting setups error " + this.errors)
+                        })
+
+                    },
+
+                /***********************
+                                *
+                                * WATCH
+                                *
+                                ***********************/
+                watch: {
+                    /*executions: function () {
+                                console.log(" -> New execution loaded after csv import" + this.executions)
+                                //this.createTrades(this.executions)*/
+                },
+
+                /***********************
+                                *
+                                * METHODS
+                                *
+                                ***********************/
+                methods: {
+
+                    /************************
+                                    * GET TAGIFY
+                                    ************************/
+                    getTagify(e, param1, param2, param3) {
+                        console.log("tags id " + JSON.parse(e.target.value)[0].id)
+                        var item = this
+                            .trades[param1]
+                            .find(x => x.id == param3);
+                        console.log("item " + JSON.stringify(item))
+                        if (item) {
+                            if (param2 == 'setups') {
+                                item.setups = JSON.parse(e.target.value);
+                            }
+                            if (param2 == 'mistakes') {
+                                item.mistakes = JSON.parse(e.target.value);
+                            }
+                        }
+
+                        //console.log("new trades " + JSON.stringify(this.trades))
+
+                    },
+
+                    /************************
+                                    * CREATE TAGIFY
+                                    ************************/
+                    createTagify(param) {
+                        var input = document
+                            .querySelectorAll('.setupsClass')
+                            .forEach(elm => {
+                                //console.log("setups " + JSON.stringify(param))
+                                // init Tagify script on the above inputs
+                                tagify = new Tagify(elm, {
+                                    whitelist: param,
+                                    maxTags: 10,
+                                    dropdown: {
+                                        maxItems: 20, // <- mixumum allowed rendered suggestions
+                                        classname: "tags-look", // <- custom classname for this dropdown, so it could be targeted
+                                        enabled: 0, // <- show suggestions on focus
+                                        closeOnSelect: false // <- do not hide the suggestions dropdown once an item has been selected
+                                    }
+                                })
+                            })
+
+                    },
+
+                    /************************
+                                    * GET RECORDING URL
+                                    ************************/
+                    getRecording(e, param1, param2) {
+                        console.log("value " + JSON.stringify(e.target.value))
+                        this
+                            .journals[param1]
+                            .recording = e.target.value;
+                        console.log("journal after record url " + JSON.stringify(this.journals[param1]))
+                    },
+
+                    /************************
+                                    * IMPORT CSV AND CREATE TABLES
+                                    ************************/
+                    createTables(e, param) {
+                        console.log("IMPORTING CSV")
+                        var files = e.target.files || e.dataTransfer.files;
+                        if (!files.length) 
+                            return;
+                        
+                        let promise = new Promise((resolve, reject) => {
+                            var reader = new FileReader();
+                            var vm = this;
+                            reader.onload = e => {
+                                resolve((vm.fileinput = reader.result));
+                            };
+                            reader.readAsText(files[0]);
+                        });
+
+                        promise.then(result => {
+                            parseCsvToJson = Papa.parse(this.fileinput, {header: true})
+                            parseCsvToJsonData = parseCsvToJson.data
+                            //console.log("parseCsvToJsonData " + JSON.stringify(parseCsvToJsonData))
+
+                            //we need to recreate the JSON with proper date format + we simplify
+                            parseCsvToJsonParse = JSON.parse(JSON.stringify(parseCsvToJsonData))
+                            const keys = Object.keys(parseCsvToJsonParse);
+                            var tempExecutions = [];
+                            var i = 0
+                            var temp = [];
+
+                            // We iterate through each execution
+                            var lastId
+                            var x
+                            for (const key of keys) {
+                                temp[i] = {};
+                                temp[i].account = parseCsvToJsonParse[key].Account;
+                                temp[i].td = moment(parseCsvToJsonParse[key]['T/D'], 'MM/DD/YYYY').unix();
+                                temp[i].sd = moment(parseCsvToJsonParse[key]['S/D'], 'MM/DD/YYYY').unix();
+                                temp[i].currency = parseCsvToJsonParse[key].Currency;
+                                temp[i].type = parseCsvToJsonParse[key].Type;
+                                temp[i].side = parseCsvToJsonParse[key].Side;
+                                temp[i].symbol = parseCsvToJsonParse[key].Symbol;
+                                temp[i].quantity = parseInt(parseCsvToJsonParse[key].Qty);
+                                temp[i].price = parseFloat(parseCsvToJsonParse[key].Price);
+                                temp[i].execTime = moment(parseCsvToJsonParse[key]['T/D'] + ' ' + parseCsvToJsonParse[key]['Exec Time'], 'MM/DD/YYYY hh:mm:ss').unix();
+                                tempId = "e" + temp[i].execTime + "_" + temp[i].symbol + "_" + temp[i].side;
+                                // It happens that two or more trades happen at the same (second) time. So we need to differentiated them
+                                if (tempId != lastId) {
+                                    x = 1
+                                    temp[i].id = tempId + "_" + x
+                                    lastId = tempId
+                                    //console.log("last id "+lastId)
+                                } else {
+                                    x++
+                                    temp[i].id = tempId + "_" + x
+                                }
+                                temp[i].commission = parseFloat(parseCsvToJsonParse[key].Comm);
+                                temp[i].sec = parseFloat(parseCsvToJsonParse[key].SEC);
+                                temp[i].taf = parseFloat(parseCsvToJsonParse[key].TAF);
+                                temp[i].nscc = parseFloat(parseCsvToJsonParse[key].NSCC);
+                                temp[i].nasdaq = parseFloat(parseCsvToJsonParse[key].Nasdaq);
+                                temp[i].ecnRemove = parseFloat(parseCsvToJsonParse[key]['ECN Remove']);
+                                temp[i].ecnAdd = parseFloat(parseCsvToJsonParse[key]['ECN Add']);
+                                temp[i].grossProceeds = parseFloat(parseCsvToJsonParse[key]['Gross Proceeds']);
+                                temp[i].netProceeds = parseFloat(parseCsvToJsonParse[key]['Net Proceeds']);
+                                temp[i].clrBroker = parseCsvToJsonParse[key]['Clr Broker'];
+                                temp[i].liq = parseCsvToJsonParse[key].Liq;
+                                temp[i].note = parseCsvToJsonParse[key].Note;
+                                temp[i].trade = null;
+
+                                tempExecutions.push(temp[i]);
+                            }
+                            //console.log("tempExecutions " + JSON.stringify(tempExecutions))
+                            console.log(" -> Imported successfully csv");
+
+                            /*
+                                            * CREATING EXECUTIONS
+                                            */
+                            console.log("\nCREATING EXECUTIONS")
+                            var a = _
+                                .chain(tempExecutions)
+                                .orderBy(["execTime"], ["asc"])
+                                .groupBy("td");
+
+                            this.executions = JSON.parse(JSON.stringify(a))
+                            //console.log('exeuctions ' + JSON.stringify(this.executions))
+                            console.log(" -> Created executions table successfully");
+
+                            /*
+                                            * CREATING GENERAL BLOTTER
+                                            */
+                            console.log("\nCREATING GENERAL BLOTTER")
+                            objectQ = JSON.parse(JSON.stringify(a))
+                            const keys7 = Object.keys(objectQ);
+
+                            var temp7 = {}
+                            for (const key7 of keys7) {
+                                temp7[key7] = {};
+                                var tempExecs = objectQ[key7]
+                                //console.log("tempBlotter " + JSON.stringify(tempExecs));
+                                var sumQuantity = 0
+                                var sumGrossProceeds = 0
+                                var sumCommission = 0
+                                var sumSec = 0
+                                var sumTaf = 0
+                                var sumNscc = 0
+                                var sumNasdaq = 0
+                                var sumOtherCommission = 0
+                                var sumFees = 0
+                                var sumNetProceeds = 0
+
+                                tempExecs.forEach(element => {
+                                    sumQuantity += element.quantity
+                                    sumGrossProceeds += element.grossProceeds
+                                    sumCommission += element.commission
+                                    sumSec += element.sec
+                                    sumTaf += element.taf
+                                    sumNscc += element.nscc
+                                    sumNasdaq += element.nasdaq
+                                    sumOtherCommission += element.sec + element.taf + element.nscc + element.nasdaq
+                                    sumFees += element.commission + element.sec + element.taf + element.nscc + element.nasdaq
+                                    sumNetProceeds += element.netProceeds
+
+                                })
+                                //console.log("SUM is " + sumGrossProceeds)
+                                temp7[key7].sumQuantity = sumQuantity;
+                                temp7[key7].sumGrossProceeds = sumGrossProceeds;
+                                temp7[key7].sumCommission = sumCommission;
+                                temp7[key7].sumOtherCommission = sumOtherCommission;
+                                temp7[key7].sumFees = sumFees;
+                                temp7[key7].sumNetProceeds = sumNetProceeds;
+
+                            }
+                            //console.log("temp 7 is " + JSON.stringify(temp7))
+                            this.blotter = temp7
+                            //console.log('blotter is ' + JSON.stringify(this.blotter))
+                            /*
+                                            * CREATING QUOTES
+                                            */
+                            console.log("\nCREATING QUOTES")
+                            objectA = JSON.parse(JSON.stringify(a))
+                            const keys3 = Object.keys(objectA);
+
+                            var temp4 = {}
+                            for (const key3 of keys3) {
+                                temp4[key3] = [];
+                                var tempExecs = objectA[key3]
+                                //console.log("tempExecutions " + JSON.stringify(tempExecs));
+                                var d = _
+                                    .chain(tempExecs)
+                                    .orderBy(["startTime"], ["asc"])
+                                    .groupBy("symbol");
+
+                                const keys4 = Object.keys(JSON.parse(JSON.stringify(d)));
+                                k = 0
+                                for (const key4 of keys4) {
+                                    temp4[key3][k] = {}
+                                    temp4[key3][k].date = key3;
+                                    temp4[key3][k].symbol = key4;
+                                    temp4[key3][k].chartImage = null;
+                                    temp4[key3][k].id = "q" + key3 + "_" + key4;
+                                    k++
+
+                                }
+                            }
+                            //console.log("temp4 " + JSON.stringify(temp4))
+                            this.quotes = temp4
+                            //console.log("quotes " + JSON.stringify(this.quotes))
+                            console.log(" -> Created quotes successfully");
+
+                            /*
+                                            * CREATING JOURNALS
+                                            */
+                            console.log("\nCREATING JOURNALS")
+                            objectD = JSON.parse(JSON.stringify(a))
+                            const keys5 = Object.keys(objectD);
+
+                            l = 0
+                            var temp5 = {}
+                            for (const key5 of keys5) {
+                                temp5[key5] = {}
+                                temp5[key5].id = "j" + key5;
+                                temp5[key5].date = key5;
+                                temp5[key5].trades = [];
+                                temp5[key5].note = null;
+                                temp5[key5].recording = null;
+                                l++
+
+                            }
+                            //console.log("temp5 " + JSON.stringify(temp5))
+                            this.journals = temp5
+                            console.log("journals " + JSON.stringify(this.journals))
+                            console.log(" -> Created journals successfully");
+
+                            /*
+                                            * CREATING TRADES
+                                            */
+                            console.log("\nCREATING TRADES")
+                            var b = _
+                                .chain(tempExecutions)
+                                .orderBy(["execTime"], ["asc"])
+                                .groupBy("symbol");
+
+                            objectB = JSON.parse(JSON.stringify(b))
+
+                            // We iterate through each symbol (key2)
+                            const keys2 = Object.keys(objectB);
+                            //console.log("keys 2 " + JSON.stringify(keys2));
+                            tempPrice = null
+                            tempQuantity = null
+                            var temp2 = []
+                            var temp8 = {}
+                            for (const key2 of keys2) {
+                                var tempExecs = objectB[key2]
+                                //console.log("tempExecutions " + JSON.stringify(tempExecs));
+
+                                var sumQuantity = 0
+                                var sumGrossProceeds = 0
+                                var sumCommission = 0
+                                var sumSec = 0
+                                var sumTaf = 0
+                                var sumNscc = 0
+                                var sumNasdaq = 0
+                                var sumOtherCommission = 0
+                                var sumFees = 0
+                                var sumNetProceeds = 0
+
+                                tempExecs.forEach(element => {
+                                    sumQuantity += element.quantity
+                                    sumGrossProceeds += element.grossProceeds
+                                    sumCommission += element.commission
+                                    sumSec += element.sec
+                                    sumTaf += element.taf
+                                    sumNscc += element.nscc
+                                    sumNasdaq += element.nasdaq
+                                    sumOtherCommission += element.sec + element.taf + element.nscc + element.nasdaq
+                                    sumFees += element.commission + element.sec + element.taf + element.nscc + element.nasdaq
+                                    sumNetProceeds += element.netProceeds
+
+                                })
+                                console.log("for symbol " + key2 + "the quantity is " + sumQuantity)
+                                for (const tempExec of tempExecs) {
+                                    //console.log("tempExec " + JSON.stringify(tempExec));
+                                    if (tempQuantity == null) { //= new trade
+                                        console.log(" -> New trade")
+                                        //console.log(" -> temp2 new trade is " + JSON.stringify(temp2))
+                                        temp7 = {};
+                                        temp7.id = "t" + tempExec.execTime + "_" + tempExec.symbol + "_" + tempExec.side;
+                                        //console.log("account " + tempExec.account)
+                                        temp7.account = tempExec.account;
+                                        temp7.td = tempExec.td;
+                                        temp7.currency = tempExec.currency;
+                                        temp7.type = tempExec.type;
+                                        temp7.side = tempExec.side;
+                                        if (tempExec.side == "B") {
+                                            temp7.strategy = "long"
+                                        } else {
+                                            temp7.strategy = "short"
+                                        }
+                                        temp7.symbol = tempExec.symbol;
+                                        temp7.quantity = tempExec.quantity;
+                                        temp7.entryPrice = tempExec.price;
+                                        temp7.entryTime = tempExec.execTime;
+                                        temp7.commission = tempExec.commission;
+                                        temp7.sec = tempExec.sec;
+                                        temp7.taf = tempExec.taf;
+                                        temp7.nscc = tempExec.nscc;
+                                        temp7.nasdaq = tempExec.nasdaq;
+                                        temp7.ecnRemove = tempExec.ecnRemove;
+                                        temp7.ecnAdd = tempExec.ecnAdd;
+                                        temp7.entryGrossProceeds = tempExec.grossProceeds;
+                                        temp7.grossProceeds = tempExec.grossProceeds;
+                                        temp7.entryNetProceeds = tempExec.netProceeds;
+                                        temp7.netProceeds = tempExec.netProceeds;
+                                        temp7.clrBroker = tempExec.clrBroker;
+                                        temp7.liq = tempExec.liq;
+                                        temp7.note = tempExec.note;
+                                        temp7.executions = []
+                                        temp7.setups = null;
+                                        temp7.mistakes = null;
+                                        temp7
+                                            .executions
+                                            .push(tempExec.id)
+
+                                        this
+                                            .executions[tempExec.td]
+                                            .find(x => x.id == tempExec.id)
+                                            .trade = temp7
+                                            .id
+
+                                            this
+                                            .journals[tempExec.td]
+                                            .trades
+                                            .push(temp7.id)
+                                        //console.log("new journals is " + JSON.stringify(this.journals))
+
+                                        tempQuantity = tempExec.quantity
+
+                                    } else if (tempQuantity != 0) { //= concatenating trade
+                                        console.log(" -> Concatenating trade")
+                                        //console.log(" -> temp2 concat is " + JSON.stringify(temp2))
+                                        this
+                                            .executions[tempExec.td]
+                                            .find(x => x.id == tempExec.id)
+                                            .trade = temp7.id
+                                        temp7.commission = temp7.commission + tempExec.commission;
+                                        temp7.sec = temp7.sec + tempExec.sec;
+                                        temp7.taf = temp7.taf + tempExec.taf;
+                                        temp7.nscc = temp7.nscc + tempExec.nscc;
+                                        temp7.nasdaq = temp7.nasdaq + tempExec.nasdaq;
+                                        temp7.grossProceeds = temp7.grossProceeds + tempExec.grossProceeds;
+                                        temp7.netProceeds = temp7.netProceeds + tempExec.netProceeds;
+                                        temp7
+                                            .executions
+                                            .push(tempExec.id)
+
+                                        if (tempExec.side == temp7.side) {
+                                            temp7.quantity = temp7.quantity + tempExec.quantity
+                                        }
+                                        if (tempExec.side == "B") {
+                                            tempQuantity = tempQuantity + tempExec.quantity
+
+                                        } else {
+                                            tempQuantity = tempQuantity - tempExec.quantity
+                                        }
+                                        if (tempQuantity == 0) {
+                                            temp7.exitPrice = tempExec.price;
+                                            temp7.exitTime = tempExec.execTime;
+                                            temp7.exitGrossProceeds = tempExec.grossProceeds;
+                                            if (temp7.grossProceeds >= 0) {
+                                                temp7.grossStatus = "win"
+                                            } else {
+                                                temp7.grossStatus = "loss"
+                                            }
+
+                                            temp7.exitNetProceeds = tempExec.netProceeds;
+                                            if (temp7.netProceeds >= 0) {
+                                                temp7.netStatus = "win"
+                                            } else {
+                                                temp7.netStatus = "loss"
+                                            }
+
+                                            tempQuantity = null
+                                            //console.log("tempQuantity "+tempQuantity)
+
+                                            temp2.push(temp7)
+                                            //console.log("temp2 is " + JSON.stringify(temp2))
+                                            console.log(" -> trade concat finished")
+                                        }
+                                    }
+
+                                }
+                            }
+
+                            var c = _
+                                .chain(temp2)
+                                .orderBy(["startTime"], ["asc"])
+                                .groupBy("td");
+                            //console.log("Trades / C " + JSON.stringify(c))
+                            this.trades = JSON.parse(JSON.stringify(c))
+                            console.log(" -> Created trades table successfully");
+
+                            /* CREATING BLOTTER BY SYMBOL
+                                            */
+                            console.log("\nCREATING BLOTTER BY SYMBOL")
+                            objectZ = JSON.parse(JSON.stringify(c))
+                            const keys9 = Object.keys(objectZ);
+                            var temp10 = {}
+                            for (const key9 of keys9) {
+                                temp10[key9] = {}
+                                var tempExecs = objectZ[key9]
+                                //console.log("tempExecs9 " + JSON.stringify(tempExecs));
+                                var z = _
+                                    .chain(tempExecs)
+                                    .orderBy(["startTime"], ["asc"])
+                                    .groupBy("symbol");
+                                objectY = JSON.parse(JSON.stringify(z))
+                                const keys10 = Object.keys(objectY);
+                                for (const key10 of keys10) {
+                                    console.log("key 10 " + key10)
+                                    //console.log("z "+JSON.stringify(z))
+                                    var tempExecs = objectY[key10]
+                                    //console.log("tempExecs10 " + JSON.stringify(tempExecs));
+                                    temp10[key9][key10] = {};
+                                    var sumQuantity = 0
+                                    var sumGrossProceeds = 0
+                                    var sumCommission = 0
+                                    var sumSec = 0
+                                    var sumTaf = 0
+                                    var sumNscc = 0
+                                    var sumNasdaq = 0
+                                    var sumOtherCommission = 0
+                                    var sumFees = 0
+                                    var sumNetProceeds = 0
+
+                                    tempExecs.forEach(element => {
+                                        sumQuantity += element.quantity
+                                        sumGrossProceeds += element.grossProceeds
+                                        sumCommission += element.commission
+                                        sumSec += element.sec
+                                        sumTaf += element.taf
+                                        sumNscc += element.nscc
+                                        sumNasdaq += element.nasdaq
+                                        sumOtherCommission += element.sec + element.taf + element.nscc + element.nasdaq
+                                        sumFees += element.commission + element.sec + element.taf + element.nscc + element.nasdaq
+                                        sumNetProceeds += element.netProceeds
+
+                                    })
+                                    //console.log("SUM is " + sumGrossProceeds)
+                                    temp10[key9][key10].symbol = key10;
+                                    temp10[key9][key10].sumQuantity = sumQuantity*2;
+                                    temp10[key9][key10].sumGrossProceeds = sumGrossProceeds;
+                                    temp10[key9][key10].sumCommission = sumCommission;
+                                    temp10[key9][key10].sumOtherCommission = sumOtherCommission;
+                                    temp10[key9][key10].sumFees = sumFees;
+                                    temp10[key9][key10].sumNetProceeds = sumNetProceeds;
+                                }
+
+                            }
+                            //console.log("temp 10 is " + JSON.stringify(temp10))
+                            this.symbolBlotter = temp10
+                            //console.log('blotter is '+JSON.stringify(this.blotter))
+
+                            //normally, I should use promise here but I do not want to change all my code so I use settimout
+                            setTimeout(() => {
+                                this.createTagify(param)
+                            }, 1000)
+
+                        }, error => {
+                            console.log(" -> Error importing csv");
+                            console.log(error);
+                        });
+                    },
+
+                    /************************
+                                    * PREVIEW IMAGE
+                                    ************************/
+                    previewImage: function (event, param1, param2) {
+                        console.log("param1 " + param1 + " and param2 " + param2)
+                        // Reference to the DOM input element
+                        var input = event.target;
+
+                        // Ensure that you have a file before attempting to read it
+                        if (input.files && input.files[0]) {
+                            // create a new FileReader to read this image and convert to base64 format
+                            var reader = new FileReader();
+                            // Define a callback function to run, when FileReader finishes its job
+                            reader.onload = (e) => {
+
+                                // Note: arrow function used here, so that "this.imageData" refers to the imageData of Vue component
+                                // Read image as base64 and set to imageData
+                                console.log("array " + JSON.stringify(this.quotes[param1]))
+                                var item = this
+                                    .quotes[param1]
+                                    .find(x => x.symbol == param2);
+                                console.log("item " + JSON.stringify(item))
+                                if (item) {
+                                    item.chartImage = e.target.result;
+                                }
+
+                                console.log("new quotes " + JSON.stringify(this.quotes))
+                                /*this
+                                    .quotes
+                                    .param1[0]
+                                    .param2 = e.target.result;*/
+                            }
+                            // Start the reader job - read file as a data url (base64 format)
+                            reader.readAsDataURL(input.files[0]);
+                        }
+                    },
+
+                    /************************
+                                    * POST JTRADE
+                                    ************************/
+                    uploadJournals: function () {
+                        this.spinner = true
+                        console.log("UPLOADING JOURNALS")
+                        url = window.location.href + "scripts/uploadJournals.php"
+                        axios
+                            .post(url, {
+                                executions: this.executions,
+                                trades: this.trades,
+                                quotes: this.quotes,
+                                journals: this.journals
+                            })
+                            .then(response => {
+                                console.log(" -> Upload journals response " + JSON.stringify(response))
+                                if (response.data.length > 0) {
+                                    this.responseError = response
+                                        .data
+                                        $('#errorModal')
+                                        .modal()
+                                } else {
+                                    console.log(" -> Uploaded journals with no errors")
+                                    location.reload();
+                                    this.spinner = false
+                                }
+                            })
+                            .catch(e => {
+                                location.reload();
+                                this.spinner = false
+                                this
+                                    .errors
+                                    .push(e)
+                                console.log(moment().format() + ": getting setups error " + this.errors)
+                            })
+                        }
+                }
+            })
+        </script>
+    </body>
+</html>

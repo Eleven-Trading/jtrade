@@ -1,0 +1,82 @@
+    .logo {
+        height: 4em;
+    }
+    
+    @media (min-width: 576px) {
+        .jumbotron {
+            padding: 1em;
+        }
+    }
+    /* TAGIFY */
+    .tagify{
+        font-size: small;
+    }
+    
+    .tags-look .tagify__dropdown__item {
+        display: inline-block;
+        border-radius: 3px;
+        padding: .3em .5em;
+        border: 1px solid #CCC;
+        background: #F3F3F3;
+        margin: .2em;
+        font-size: .85em;
+        color: black;
+        transition: 0s;
+    }
+    
+    .tags-look .tagify__dropdown__item--active {
+        color: black;
+    }
+    
+    .tags-look .tagify__dropdown__item:hover {
+        background: lightyellow;
+        border-color: gold;
+    }
+    
+    .image-preview img {
+        height: 200px;
+    }
+    
+    .loading {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #fff;
+    }
+    
+    .spinner-border {
+        left: 50%;
+        position: absolute;
+        top: 50%;
+        width: 5rem;
+        height: 5rem;
+        color: #01B4FF;
+    }
+    
+    .btn-blue {
+        background-color: #01B4FF;
+        color: white;
+    }
+    
+    .btn-blue:hover {
+        background-color: #2ea2d9;
+        color: white;
+    }
+
+    .text-blue{
+        color: #01B4FF;
+    }
+
+    .sumRow{
+        font-weight: bold;
+        border-top: 3px solid black;
+    }
+
+    .greenTrade{
+        color: green;
+    }
+    .redTrade{
+        color: red;
+    }
