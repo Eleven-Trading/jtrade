@@ -85,19 +85,22 @@ foreach ($quotes as $response) {
         $finvizCrawler = $finviz_crawler->quote($resp["symbol"]);
         $finvizData = $finvizCrawler["snapshot"];
         //error_log("finviz " . json_encode($finvizData));
+        
+        $shsFloat = 0;
         $str = $finvizData["Shs Float"];
-        $arr = preg_split('/(?<=[0-9])(?=[a-z]+)/i', $str);
-        $shsFloatNumber = floatval($arr[0]);
-        $shsFloatMult = $arr[1];
-        $shsFloat = null;
-        if ($shsFloatMult == "M") {
-            $shsFloat = $shsFloatNumber;
-        } else if ($shsFloatMult == "B") {
-            $shsFloat = $shsFloatNumber * 1000;
-        } else if ($shsFloatMult == "K") {
-            $shsFloat = $shsFloatNumber / 1000;
-        } else {
-            error_log(" -> Unrecognized multiplier " . $shsFloatMult);
+        if ($str != "-") {
+            $arr = preg_split('/(?<=[0-9])(?=[a-z]+)/i', $str);
+            $shsFloatNumber = floatval($arr[0]);
+            $shsFloatMult = $arr[1];
+            if ($shsFloatMult == "M") {
+                $shsFloat = $shsFloatNumber;
+            } else if ($shsFloatMult == "B") {
+                $shsFloat = $shsFloatNumber * 1000;
+            } else if ($shsFloatMult == "K") {
+                $shsFloat = $shsFloatNumber / 1000;
+            } else {
+                error_log(" -> Unrecognized multiplier " . $shsFloatMult);
+            }
         }
 
         $shortFloat = floatval(str_replace("%", "", $finvizData["Short Float"])) / 100;
@@ -239,15 +242,15 @@ foreach ($trades as $response) {
             //error_log(" -> mysql query failed with message " . $sql . "<br>'");
             array_push($errors, "Trades error: " . $conn->error);
         }
-           
-        
+
+
         $table = 'tradeSetupsMistakes';
         error_log("\nINSERTING SETUPS INTO MYSQL");
         if (!empty($setupsArray)) {
             foreach ($setupsArray as $item) {
-                $sql = 'INSERT INTO ' . $table . ' (id, trade, smId, smType, account, td, currency, type, side, symbol, quantity, entryPrice, exitPrice, entryTime, exitTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, entryGrossProceeds, exitGrossProceeds, netProceeds, entryNetProceeds, exitNetProceeds, clrBroker, liq, note, strategy, executions, setups, mistakes, grossStatus, netStatus) VALUES ("sm' . $resp["entryTime"] .'_' . $resp["symbol"] .'_' . $item . '_s", "' . $resp["id"] . '", "' . $item . '", "setup", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["entryPrice"] . '", "' . $resp["exitPrice"] . '", FROM_UNIXTIME(' . $resp["entryTime"] . '), FROM_UNIXTIME(' . $resp["exitTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["entryGrossProceeds"] . '", "' . $resp["exitGrossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["entryNetProceeds"] . '", "' . $resp["exitNetProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["strategy"] . '", "' . $implodeExecutions . '", "' . $implodeSetups . '", "' . $implodeMistakes . '", "' . $resp["grossStatus"] . '", "' . $resp["netStatus"] . '")';
+                $sql = 'INSERT INTO ' . $table . ' (id, trade, smId, smType, account, td, currency, type, side, symbol, quantity, entryPrice, exitPrice, entryTime, exitTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, entryGrossProceeds, exitGrossProceeds, netProceeds, entryNetProceeds, exitNetProceeds, clrBroker, liq, note, strategy, executions, setups, mistakes, grossStatus, netStatus) VALUES ("sm' . $resp["entryTime"] . '_' . $resp["symbol"] . '_' . $item . '_s", "' . $resp["id"] . '", "' . $item . '", "setup", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["entryPrice"] . '", "' . $resp["exitPrice"] . '", FROM_UNIXTIME(' . $resp["entryTime"] . '), FROM_UNIXTIME(' . $resp["exitTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["entryGrossProceeds"] . '", "' . $resp["exitGrossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["entryNetProceeds"] . '", "' . $resp["exitNetProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["strategy"] . '", "' . $implodeExecutions . '", "' . $implodeSetups . '", "' . $implodeMistakes . '", "' . $resp["grossStatus"] . '", "' . $resp["netStatus"] . '")';
                 $result = $conn->query($sql);
-        
+
                 if ($result === TRUE) {
                     error_log(" -> Inserted setup " . $item . " to MYSQL");
                 } else {
@@ -262,9 +265,9 @@ foreach ($trades as $response) {
         error_log("\nINSERTING MISTAKES INTO MYSQL");
         if (!empty($mistakesArray)) {
             foreach ($mistakesArray as $item) {
-                $sql = 'INSERT INTO ' . $table . ' (id, trade, smId, smType, account, td, currency, type, side, symbol, quantity, entryPrice, exitPrice, entryTime, exitTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, entryGrossProceeds, exitGrossProceeds, netProceeds, entryNetProceeds, exitNetProceeds, clrBroker, liq, note, strategy, executions, setups, mistakes, grossStatus, netStatus) VALUES ("sm' . $resp["entryTime"] .'_' . $resp["symbol"] .'_' . $item . '_m", "' . $resp["id"] . '", "' . $item . '", "mistake", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["entryPrice"] . '", "' . $resp["exitPrice"] . '", FROM_UNIXTIME(' . $resp["entryTime"] . '), FROM_UNIXTIME(' . $resp["exitTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["entryGrossProceeds"] . '", "' . $resp["exitGrossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["entryNetProceeds"] . '", "' . $resp["exitNetProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["strategy"] . '", "' . $implodeExecutions . '", "' . $implodeSetups . '", "' . $implodeMistakes . '", "' . $resp["grossStatus"] . '", "' . $resp["netStatus"] . '")';
+                $sql = 'INSERT INTO ' . $table . ' (id, trade, smId, smType, account, td, currency, type, side, symbol, quantity, entryPrice, exitPrice, entryTime, exitTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, entryGrossProceeds, exitGrossProceeds, netProceeds, entryNetProceeds, exitNetProceeds, clrBroker, liq, note, strategy, executions, setups, mistakes, grossStatus, netStatus) VALUES ("sm' . $resp["entryTime"] . '_' . $resp["symbol"] . '_' . $item . '_m", "' . $resp["id"] . '", "' . $item . '", "mistake", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["entryPrice"] . '", "' . $resp["exitPrice"] . '", FROM_UNIXTIME(' . $resp["entryTime"] . '), FROM_UNIXTIME(' . $resp["exitTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["entryGrossProceeds"] . '", "' . $resp["exitGrossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["entryNetProceeds"] . '", "' . $resp["exitNetProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["strategy"] . '", "' . $implodeExecutions . '", "' . $implodeSetups . '", "' . $implodeMistakes . '", "' . $resp["grossStatus"] . '", "' . $resp["netStatus"] . '")';
                 $result = $conn->query($sql);
-        
+
                 if ($result === TRUE) {
                     error_log(" -> Inserted mistake " . $item . " to MYSQL");
                 } else {
@@ -275,8 +278,6 @@ foreach ($trades as $response) {
                 }
             }
         }
-        
-
     }
 }
 
@@ -288,7 +289,7 @@ foreach ($executions as $response) {
     foreach ($response as $resp) {
         //error_log("exec " . json_encode($resp));
 
-        
+
         $sql = 'INSERT INTO ' . $table . ' (id, account, td, sd, currency, type, side, symbol, quantity, price, execTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, netProceeds, clrBroker, liq, note, trade) VALUES ("' . $resp["id"] . '", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), FROM_UNIXTIME(' . $resp["sd"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["price"] . '", FROM_UNIXTIME(' . $resp["execTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["trade"] . '")';
         $result = $conn->query($sql);
 
