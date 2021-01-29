@@ -13,6 +13,8 @@ $trades = $data["trades"];
 $quotes = $data["quotes"];
 $journals = $data["journals"];
 $errors = [];
+
+//error_log("executions ".json_encode($executions));
 //error_log(("executions " . json_encode($executions) . "\n\ntrades " . json_encode($trades) . "\n\nquotes " . json_encode($quotes) . "\n\njournals " . json_encode($journals)));
 
 $conn = new mysqli($host, $user, $password, $mysqlDB, $port);
@@ -285,10 +287,9 @@ error_log("\nINSERTING EXECUTIONS INTO MYSQL");
 foreach ($executions as $response) {
 
     $table = 'executions';
-    //error_log("executions " . json_encode($response));
+    //error_log("Each execution " . json_encode($response));
     foreach ($response as $resp) {
-        //error_log("exec " . json_encode($resp));
-
+        error_log(" -> Each exec " . json_encode($resp));
 
         $sql = 'INSERT INTO ' . $table . ' (id, account, td, sd, currency, type, side, symbol, quantity, price, execTime, commission, sec, taf, nscc, nasdaq, ecnRemove, ecnAdd, grossProceeds, netProceeds, clrBroker, liq, note, trade) VALUES ("' . $resp["id"] . '", "' . $resp["account"] . '", FROM_UNIXTIME(' . $resp["td"] . '), FROM_UNIXTIME(' . $resp["sd"] . '), "' . $resp["currency"] . '", "' . $resp["type"] . '", "' . $resp["side"] . '", "' . $resp["symbol"] . '", "' . $resp["quantity"] . '", "' . $resp["price"] . '", FROM_UNIXTIME(' . $resp["execTime"] . '), "' . $resp["commission"] . '", "' . $resp["sec"] . '", "' . $resp["taf"] . '", "' . $resp["nscc"] . '", "' . $resp["nasdaq"] . '", "' . $resp["ecnRemove"] . '", "' . $resp["ecnAdd"] . '", "' . $resp["grossProceeds"] . '", "' . $resp["netProceeds"] . '", "' . $resp["clrBroker"] . '", "' . $resp["liq"] . '", "' . $resp["note"] . '", "' . $resp["trade"] . '")';
         $result = $conn->query($sql);
