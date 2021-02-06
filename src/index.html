@@ -1,9 +1,9 @@
 <html>
     <head>
         <link rel="icon" type="image/png" href="images/bull.png"/>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
         <link rel="stylesheet" href="css/style.css"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@3.17.10/dist/tagify.css"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify@latest/dist/tagify.css"/>
         <script src="https://use.fontawesome.com/365512f0c3.js"></script>
     </head>
     <body>
@@ -23,7 +23,7 @@
                         </form>
                     </div>
                 </nav>
-
+                    <p class="text-center fst-italic">Last uploaded date : {{latestDate}}</p>
                 <div class="" v-if="executions != null" v-for="(execution, index) in executions">
 
                     <h2 class="text-center text-blue mb-3 mt-2">{{ $moment.unix(index).format("dddd, DD MMM YYYY") }}</h2>
@@ -63,7 +63,7 @@
 
                         <div>
                             <h3 class="ml-2 text-blue d-inline-block">EXECUTIONS</h3>
-                            <button type="button" class="ml-3 btn btn-primary btn-sm" @click="executionsShow = !executionsShow">Show/Hide</button>
+                            <button type="button" class="ml-3 btn btn-blue btn-sm" @click="executionsShow = !executionsShow">Show/Hide</button>
                         </div>
                         <table v-show="executionsShow == true " class="table">
                             <thead class="thead-dark">
@@ -168,8 +168,8 @@
                     </div>
                 </div>
 
-                <div class="text-center mb-3" v-if="executions != null">
-                    <button type="button" class="btn btn-blue btn-lg btn-block" v-on:click="uploadJournals">UPLOAD</button>
+                <div class="text-center mb-3 d-grid gap-2" v-if="executions != null">
+                    <button type="button" class="btn btn-blue" v-on:click="uploadJournals">UPLOAD</button>
                 </div>
             </div>
 
@@ -200,17 +200,29 @@
                         *
                         ********************************************************* -->
         <!--<script type="text/javascript" src="../node_modules/popper.js/dist/umd/popper.min.js"></script>-->
-        <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
-        <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script>
-
+        <script src="https://cdn.jsdelivr.net/npm/moment@latest/moment.min.js"></script>
         <script src="https://momentjs.com/downloads/moment-timezone-with-data.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-moment-lib@1.2.2/dist/vue-moment-lib.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify@3.17.10/dist/tagify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify@latest/dist/tagify.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/dayjs@latest/dayjs.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/dayjs@latest/plugin/utc.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/dayjs@latest/plugin/timezone.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/dayjs@latest/plugin/customParseFormat.js"></script>
+        <script>
+            dayjs.extend(window.dayjs_plugin_utc)
+        </script>
+        <script>
+            dayjs.extend(window.dayjs_plugin_timezone)
+        </script>
+        <script>
+            dayjs.extend(window.dayjs_plugin_customParseFormat)
+        </script>
         <!-- ********************************************************* 
                         *
                         VUEJS
@@ -229,6 +241,7 @@
                 data() {
                     return {
                         spinner: false,
+                        latestDate: null,
                         executionsShow: false,
                         blotter: null,
                         symbolBlotter: null,
@@ -255,6 +268,8 @@
                                 *
                                 ***********************/
                 mounted() {
+                    this.getLatestInputDate()
+
                     $('#errorModal').on('hidden.bs.modal', function (e) {
                         location.reload();
                         this.spinner = false
@@ -293,6 +308,22 @@
                                 *
                                 ***********************/
                 methods: {
+
+                    getLatestInputDate() {
+                        console.log("GETTING LATEST DATE")
+                        url = window.location.href + "scripts/latestDate.php"
+                        axios
+                            .get(url, {})
+                            .then(response => {
+                                console.log(" -> Latest date response " + JSON.stringify(response) + " and timezone " + dayjs.tz.guess())
+                                //var latestDate = dayjs.tz(response.data, "DD-MM-YYYY", "Europe/Brussels")
+                                this.latestDate = dayjs
+                                    .utc(response.data)
+                                    .local()
+                                    .format("DD MMMM YYYY")
+                                //console.log("latest date " + this.latestDate)
+                            })
+                    },
 
                     /************************
                                     * GET TAGIFY
@@ -760,7 +791,7 @@
                                     })
                                     //console.log("SUM is " + sumGrossProceeds)
                                     temp10[key9][key10].symbol = key10;
-                                    temp10[key9][key10].sumQuantity = sumQuantity*2;
+                                    temp10[key9][key10].sumQuantity = sumQuantity * 2;
                                     temp10[key9][key10].sumGrossProceeds = sumGrossProceeds;
                                     temp10[key9][key10].sumCommission = sumCommission;
                                     temp10[key9][key10].sumOtherCommission = sumOtherCommission;
@@ -836,7 +867,7 @@
                                 journals: this.journals
                             })
                             .then(response => {
-                                console.log(" -> Upload journals response " + JSON.stringify(response))
+                                //console.log(" -> Upload journals response " + JSON.stringify(response))
                                 if (response.data.length > 0) {
                                     this.responseError = response
                                         .data
