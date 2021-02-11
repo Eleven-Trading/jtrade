@@ -1,6 +1,6 @@
 {
   "name": "jtrade",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "jtrade is a simple and an open source tool to journalize your trades",
   "main": "gulpfile.js",
   "scripts": {
