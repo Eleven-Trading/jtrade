@@ -22,7 +22,7 @@ Include logo/demo screenshot etc.
 # Tech/framework used
 
 ## Built with
-- Bootstrap 4 
+- Bootstrap 5
 - VueJS
 - PHP
 
