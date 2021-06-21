@@ -1,3 +1,5 @@
+! This code is not maintained any more and has been replaced by [TradeNote](https://github.com/Eleven-Trading/TradeNote), a full version open source trade journal !
+
 # jtrade
 jtrade is a simple and an open source tool to journalize your trades.
 
